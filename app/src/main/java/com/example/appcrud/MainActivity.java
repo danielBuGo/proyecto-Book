@@ -14,11 +14,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-// Importa la clase TextView
+import android.app.AlertDialog;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
-    EditText Codigo, Descripcion, Precio;
+    EditText Codigo, Descripcion, Precio, Disponible;
     Button Insertar, Buscar, Modificar, Eliminar;
     TextView mensajeTextView;
     @Override
@@ -47,22 +47,25 @@ public class MainActivity extends AppCompatActivity {
             String codigo = Codigo.getText().toString();
             String descripcion = Descripcion.getText().toString();
             String precio = Precio.getText().toString();
+            int disponible = Integer.parseInt(Disponible.getText().toString());
 
             if (!codigo.isEmpty() && !descripcion.isEmpty() && !precio.isEmpty()) {
                 ContentValues registro = new ContentValues();
                 registro.put("codigo", codigo);
                 registro.put("descripcion", descripcion);
                 registro.put("precio", precio);
+                registro.put("disponible", disponible);
 
                 Codigo.setText("");
                 Descripcion.setText("");
                 Precio.setText("");
-                Toast.makeText(getApplicationContext(), "INFORMACIÓN GUARDADA", Toast.LENGTH_SHORT).show();
+                Disponible.setText("");
+                mensajeTextView.setText("INFORMACIÓN GUARDADA");
 
                 BaseDeDatos.insert("articulos", null, registro);
                 BaseDeDatos.close();
             } else {
-                Toast.makeText(getApplicationContext(), "LLENA LOS CAMPOS", Toast.LENGTH_SHORT).show();
+                mensajeTextView.setText("LLENA LOS CAMPOS");
             }
         });
 
@@ -93,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
 
                 BaseDeDatos.close();
             } else {
-                // Modificación: Establecer el mensaje en el TextView
+
                 mensajeTextView.setText("Debes introducir el código del libro");
             }
         });
@@ -116,36 +119,53 @@ public class MainActivity extends AppCompatActivity {
                 BaseDeDatos.close();
 
                 if (validar == 1) {
-                    Toast.makeText(getApplicationContext(), "Registro modificado", Toast.LENGTH_SHORT).show();
+                    mensajeTextView.setText("Registro modificado");
                 } else {
-                    Toast.makeText(getApplicationContext(), "La modificación no se realizó", Toast.LENGTH_SHORT).show();
+                    mensajeTextView.setText("No se pudo modificar");
                 }
             } else {
-                Toast.makeText(getApplicationContext(), "Debes llenar todos los datos", Toast.LENGTH_SHORT).show();
+                mensajeTextView.setText("Debes llenar los datos");
             }
         });
+
+
 
         Eliminar.setOnClickListener(v -> {
-            AdminSQLiteOpenHelper admin = new AdminSQLiteOpenHelper(this, "tienda", null, 1);
-            SQLiteDatabase BaseDeDatos = admin.getWritableDatabase();
-            String codigo = Codigo.getText().toString();
-
-            if (!codigo.isEmpty()) {
-                int validacion = BaseDeDatos.delete("articulos", "codigo=" + codigo, null);
-                BaseDeDatos.close();
-
-                Codigo.setText("");
-                Descripcion.setText("");
-                Precio.setText("");
-
-                if (validacion == 1) {
-                    Toast.makeText(getApplicationContext(), "Registro eliminado", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "No se pudo eliminar", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(getApplicationContext(), "Debes introducir el código del libro", Toast.LENGTH_SHORT).show();
-            }
+            // Crear un AlertDialog de confirmación
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setMessage("¿Está seguro de borrar el registro?")
+                    .setPositiveButton("Sí", (dialog, which) -> {
+                        // Si el usuario confirma, procede a borrar el registro
+                        eliminarRegistro();
+                    })
+                    .setNegativeButton("No", (dialog, which) -> {
+                        // Si el usuario cancela, cierra el diálogo y no hace nada
+                        dialog.dismiss();
+                    })
+                    .show();
         });
+
+    }
+    private void eliminarRegistro() {
+        AdminSQLiteOpenHelper admin = new AdminSQLiteOpenHelper(this, "tienda", null, 1);
+        SQLiteDatabase BaseDeDatos = admin.getWritableDatabase();
+        String codigo = Codigo.getText().toString();
+
+        if (!codigo.isEmpty()) {
+            int validacion = BaseDeDatos.delete("articulos", "codigo=" + codigo, null);
+            BaseDeDatos.close();
+
+            Codigo.setText("");
+            Descripcion.setText("");
+            Precio.setText("");
+
+            if (validacion == 1) {
+                mensajeTextView.setText("Registro Eliminado");
+            } else {
+                mensajeTextView.setText("No se elimino");
+            }
+        } else {
+            mensajeTextView.setText("Debes ingresar el código");
+        }
     }
 }
